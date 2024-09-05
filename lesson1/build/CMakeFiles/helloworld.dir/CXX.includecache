@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ocelot/programming/otus/otus-cpp/lesson1/lib.cpp
+lib.h
+/home/ocelot/programming/otus/otus-cpp/lesson1/lib.h
+version.h
+/home/ocelot/programming/otus/otus-cpp/lesson1/version.h
+
+/home/ocelot/programming/otus/otus-cpp/lesson1/lib.h
+
+version.h
+
