@@ -1,150 +1,162 @@
-#include <cassert>
-#include <cstdlib>
 #include <iostream>
-#include <string>
 #include <vector>
-#include <algorithm>
+#include <memory>
+#include <map>
 
-// ("",  '.') -> [""]
-// ("11", '.') -> ["11"]
-// ("..", '.') -> ["", "", ""]
-// ("11.", '.') -> ["11", ""]
-// (".11", '.') -> ["", "11"]
-// ("11.22", '.') -> ["11", "22"]
-std::vector<std::string> split(const std::string &str, char d)
+template<typename T, std::size_t MaxItems>
+class CustomAllocator {
+public:
+
+    using value_type = T;
+    CustomAllocator() = default;
+    template<typename U, std::size_t S>
+    constexpr CustomAllocator(const CustomAllocator<U, S>&) noexcept {}
+
+    template<class Other>
+        struct rebind { using other =  CustomAllocator<Other, MaxItems>; };
+
+    T* allocate(std::size_t n) {
+        // std::cout << "Allocating " << n * sizeof(T) << " bytes" << std::endl;
+        if (n + size > MaxItems) {
+            // std::cout << "POOTIS\n";
+            throw std::bad_alloc();
+        }
+        size += n;
+        // std::cout << "NEW ALLOCATION "  << n << "\nCUR SIZE " << size << std::endl;
+        return static_cast<T*>(::operator new(n * sizeof(T)));
+    }
+    void deallocate(T* p, std::size_t n) noexcept {
+        // std::cout << "Deallocating memory" << std::endl;
+        ::operator delete(p);
+        size -= n;
+    }
+    template<typename U, typename... Args>
+    void construct(U* p, Args&&... args) {
+        // std::cout << "Constructing element" << std::endl;
+        new(p) U(std::forward<Args>(args)...);
+    }
+    template<typename U>
+    void destroy(U* p) noexcept {
+        // std::cout << "Destroying element" << std::endl;
+        p->~U();
+    }
+    friend bool operator==(const CustomAllocator&, const CustomAllocator&) { return true; }
+    friend bool operator!=(const CustomAllocator&, const CustomAllocator&) { return false; }
+private:
+    std::size_t size = 0;
+};
+
+template<typename T, typename A = std::allocator<T>>
+class CustomList
 {
-    std::vector<std::string> r;
-
-    std::string::size_type start = 0;
-    std::string::size_type stop = str.find_first_of(d);
-    while(stop != std::string::npos)
+public:
+    // using value_type = T;
+    typedef T value_type;
+    struct Node
     {
-        r.push_back(str.substr(start, stop - start));
-
-        start = stop + 1;
-        stop = str.find_first_of(d, start);
+        typedef T value_type;
+        Node* next = nullptr;
+        T val;
+    };
+    typename A::template rebind<Node>::other nodeAlloc;
+    CustomList()
+    {
+        _begin = _end = nullptr;
     }
 
-    r.push_back(str.substr(start));
+    void push_back(const T& val)
+    {
+        // typename A::template rebind<Node>::other nodeAlloc;
+        // Node* newNode = std::allocator_traits<Node>::allocate(nodeAlloc, 1);
+        Node* newNode = nodeAlloc.allocate(1);
+        if(_size == 0)
+        {
+            _begin = _end = newNode;
+        }
+        else
+        {
+            _end->next = newNode;
+            _end = newNode;
+        }
+        // std::allocator_traits<Node>::construct(newNode, Node());
+        nodeAlloc.construct(newNode);
+        _end->val = val;
+        _end->next = nullptr;
+        _size++;
+    }
 
-    return r;
-}
+    Node* get_begin()
+    {
+        return _begin;
+    }
 
-bool comp(std::vector<int> &a, std::vector<int> &b)
+    Node* get_end()
+    {
+        return _end;
+    }
+private:
+    Node* _begin;
+    Node* _end;
+    std::size_t _size = 0;
+    
+    A alloc;
+};
+
+int fact(int x)
 {
-    if(a[0] < b[0])
-        return false;
-    else if(a[0] > b[0])
-        return true;
+    if(x < 1)
+        return 1;
+    int b = 1;
+    for (int i = 1; i <= x; i++)
+       b *= i;
+    return b;
     
-    if(a[1] < b[1])
-        return false;
-    else if(a[1] > b[1])
-        return true;
-    
-    if(a[2] < b[2])
-        return false;
-    else if(a[2] > b[2])
-        return true;
-    
-    if(a[3] < b[3])
-        return false;
-    return true;
 }
 
 int main()
 {
-    try
+    int fact_arr[10];
+    std::map<int, int> m1;
+    for (int i = 0; i < 10; i++)
     {
-        std::vector<std::vector<int> > ip_pool;
-        std::vector<std::string> buff1;
-        std::vector<int> buff2;
-        buff2.resize(4);
-
-        for(std::string line; std::getline(std::cin, line);)
-        {
-            if(line.length() == 0)
-                break;
-            std::vector<std::string> v = split(line, '\t');
-            buff1 = std::move(split(v.at(0), '.'));
-            for(int i = 0; i < 4; i++)
-                buff2[i] = std::stoi(buff1[i]);
-            ip_pool.push_back(buff2);
-        }
-
-        // Reverse lexicographically sort
-        std::sort(ip_pool.begin(), ip_pool.end(), comp);
-
-        for(auto ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
-        {
-            for(auto ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
-            {
-                if (ip_part != ip->cbegin())
-                {
-                    std::cout << ".";
-
-                }
-                std::cout << *ip_part;
-            }
-            std::cout << std::endl;
-        }
-
-        for(auto ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
-        {
-            if(*ip->cbegin() == 1)
-            {
-                for(auto ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
-                {
-                    if (ip_part != ip->cbegin())
-                    {
-                        std::cout << ".";
-
-                    }
-                    std::cout << *ip_part;
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        for(auto ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
-        {
-            if(*ip->cbegin() == 46 && *(ip->cbegin()+1) == 70)
-            {
-                for(auto ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
-                {
-                    if (ip_part != ip->cbegin())
-                    {
-                        std::cout << ".";
-
-                    }
-                    std::cout << *ip_part;
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        for(auto ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
-        {
-            if(*ip->cbegin() == 46 || *(ip->cbegin()+1) == 46 || *(ip->cbegin()+2) == 46 || *(ip->cbegin()+3) == 46)
-            {
-                for(auto ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
-                {
-                    if (ip_part != ip->cbegin())
-                    {
-                        std::cout << ".";
-
-                    }
-                    std::cout << *ip_part;
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        
+        fact_arr[i] = fact(i);
+        m1[i] = fact_arr[i];
     }
-    catch(const std::exception &e)
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     std::cout << m1[i] << std::endl;
+    // }
+
+    std::map<int, int, std::less<int>, CustomAllocator<int, 10> > m2;
+    for (int i = 0; i < 10; i++)
     {
-        std::cerr << e.what() << std::endl;
+        m2[i] = fact_arr[i];
+    }
+    for (auto item : m2)
+    {
+        std::cout << item.first << " " << item.second << "\n";
+    }
+    
+    CustomList<int> lst1;
+    for (int i = 0; i < 10; i++)
+    {
+        lst1.push_back(fact_arr[i]);
+    }
+    // std::cout << "CustomList<int, std::allocator<int>>\n";
+    // for (auto item = lst1.get_begin(); item != nullptr; item = item->next)
+    // {
+    //     std::cout << item->val << std::endl;
+    // }
+    
+    CustomList<int, CustomAllocator<int, 10>> lst2;
+    for (int i = 0; i < 10; i++)
+    {
+        lst2.push_back(fact_arr[i]);
+    }
+    // std::cout << "CustomList<int, CustomAllocator<int, 10>>\n";
+    for (auto item = lst2.get_begin(); item != nullptr; item = item->next)
+    {
+        std::cout << item->val << std::endl;
     }
 
     return 0;
