@@ -3,16 +3,16 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(allocator VERSION ${PROJECT_VESRION})
+project(print_ip VERSION ${PROJECT_VESRION})
 
 # option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
 # configure_file(version.h.in version.h)
 
-add_executable(allocator main.cpp)
+add_executable(print_ip main.cpp)
 # add_library(ipfilter lib.cpp)
 
-set_target_properties(allocator PROPERTIES
+set_target_properties(print_ip PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -21,7 +21,7 @@ set_target_properties(allocator PROPERTIES
 #     PRIVATE "${CMAKE_BINARY_DIR}"
 # )
 
-target_link_libraries(allocator PRIVATE
+target_link_libraries(print_ip PRIVATE
     # ipfilter
 )
 
@@ -46,7 +46,7 @@ target_link_libraries(allocator PRIVATE
 # endif()
 
 if (MSVC)
-    target_compile_options(allocator PRIVATE
+    target_compile_options(print_ip PRIVATE
         /W4
     )
     # target_compile_options(ipfilter PRIVATE
@@ -58,7 +58,7 @@ if (MSVC)
     #     )
     # endif()
 else ()
-    target_compile_options(allocator PRIVATE
+    target_compile_options(print_ip PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     # target_compile_options(ipfilter PRIVATE
@@ -71,7 +71,7 @@ else ()
     # endif()
 endif()
 
-install(TARGETS allocator RUNTIME DESTINATION bin)
+install(TARGETS print_ip RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
