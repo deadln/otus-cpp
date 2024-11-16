@@ -1,3 +1,5 @@
+#ifndef DIAGRAMS_MAIN_CPP
+#define DIAGRAMS_MAIN_CPP
 #include <iostream>
 #include <memory>
 #include "controller.cpp"
@@ -59,6 +61,7 @@ public:
         }
     }
 };
+#endif
 
 int main()
 {
