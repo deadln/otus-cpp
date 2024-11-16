@@ -3,16 +3,18 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(print_ip VERSION ${PROJECT_VESRION})
+project(graph_editor VERSION ${PROJECT_VESRION})
 
 # option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
 # configure_file(version.h.in version.h)
 
-add_executable(print_ip main.cpp)
-# add_library(ipfilter lib.cpp)
+add_executable(graph_editor main.cpp)
+# add_library(graph_editor controller.cpp)
+# add_library(graph_editor model.cpp)
+# add_library(graph_editor gui_view.cpp)
 
-set_target_properties(print_ip PROPERTIES
+set_target_properties(graph_editor PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -21,7 +23,7 @@ set_target_properties(print_ip PROPERTIES
 #     PRIVATE "${CMAKE_BINARY_DIR}"
 # )
 
-target_link_libraries(print_ip PRIVATE
+target_link_libraries(graph_editor PRIVATE
     # ipfilter
 )
 
@@ -46,7 +48,7 @@ target_link_libraries(print_ip PRIVATE
 # endif()
 
 if (MSVC)
-    target_compile_options(print_ip PRIVATE
+    target_compile_options(graph_editor PRIVATE
         /W4
     )
     # target_compile_options(ipfilter PRIVATE
@@ -58,7 +60,7 @@ if (MSVC)
     #     )
     # endif()
 else ()
-    target_compile_options(print_ip PRIVATE
+    target_compile_options(graph_editor PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     # target_compile_options(ipfilter PRIVATE
@@ -71,7 +73,7 @@ else ()
     # endif()
 endif()
 
-install(TARGETS print_ip RUNTIME DESTINATION bin)
+install(TARGETS graph_editor RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")

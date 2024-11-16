@@ -1,117 +1,69 @@
 #include <iostream>
-#include <bitset>
-#include <cmath>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <list>
-#include <tuple>
+#include <memory>
+#include "controller.cpp"
 
-/// \brief Домашнее задание по курсу C++ Proffessional от OTUS
-
-namespace sfinae
+class IGUIView
 {
-    namespace ip_printer {
-        /**
-         * \brief Перегрузка функции для целочисленного кодирования IP-адреса. Декодируется в IP-адрес побайтово.
-         *
-         * \param address IP-адрес в виде целого числа
-         */
-        template <typename T>
-        auto print_ip(T address, long) -> decltype(abs(address))
-        {
-            std::bitset<sizeof(T)*8> bs{(long long unsigned int)address};
-            uint16_t base, num;
-            for (size_t i = bs.size() - 1; i >= 7; i -= 8)
-            {
-                base = 1;
-                num = 0;
-                for (unsigned int j = i - 7; j <= i; j++)
-                {
-                    num += bs[j] * base;
-                    base *= 2;
-                }
-                std::cout << num;
-                if(i != 7)
-                    std::cout << ".";
-                else
-                    break;
-            }
-            std::cout << std::endl;
-            return 0;
-        }
+public:
+    IGUIView(){};
+    virtual void create_document_btn()=0;
+    virtual void import_document_btn(std::string filename)=0;
+    virtual void export_document_btn(std::string filename)=0;
+    virtual void create_gp_btn()=0;
+    virtual void remove_gp_btn(size_t i)=0;
+    virtual void render_gp(GraphPrimitive gp)=0;
+    virtual void render_all_gp()=0;
+};
 
-        
-        /**
-         * \brief Перегрузка функции для строкового формата IP-адреса. Выводится в функции как есть
-         *
-         * \param address IP-адрес в виде строки
-         */
-        template <typename T>
-        auto print_ip(T address, int) -> decltype(address.c_str()) 
-        {
-            std::cout << address << std::endl;
-            return address.c_str();
-        }
-
-        /**
-         * \brief Перегрузка функции для контейнерного формата IP-адреса. Элементы контейнера выводятся по очереди через точку.
-         *
-         * \param address IP-адрес в виде контейнера std::list или std::vector
-         */
-        template <typename T>
-        auto print_ip(T address, long) -> decltype(address.size())
-        {
-            size_t cont_s = address.size(), i = 0;
-            for(auto item:address)
-            {
-                std::cout << item;
-                if(i < cont_s - 1)
-                    std::cout << ".";
-                i++;
-            }
-            std::cout << std::endl;
-            return address.size();
-        }
-
-        // tuple
-        template <typename T = std::tuple<int>>
-        auto print_ip(T address, int) -> decltype(std::get<0>(address))
-        {
-            std::cout << "Shnyaga: " << address << std::endl;
-            // size_t cont_s = address.size(), i = 0;
-            // for(auto item:address)
-            // {
-            //     std::cout << item;
-            //     if(i < cont_s - 1)
-            //         std::cout << ".";
-            //     i++;
-            // }
-            // std::cout << std::endl;
-            // return address.size();
-        }
-    }
-
-    /*!
-    \brief Выводит входное входную переменную в виде IP адреса. 
-    \param[in] address Входной объект, содержащий IP адрес: целочисленный тип(побитовое преобразование), строка(вывод как есть), контейнер(вывод элементов)
-    */
-    template <typename T>
-    auto print_ip(T address)
+class GUIView : public IGUIView
+{
+    std::unique_ptr<Controller> controller_ptr;
+    std::shared_ptr<Workspace> ws_ptr;
+public:
+    GUIView()
     {
-        ip_printer::print_ip(address, int{});
+        controller_ptr = std::make_unique<Controller>();
+        ws_ptr = controller_ptr->get_ws_ptr();
     }
-}
+    void create_document_btn()
+    {
+        controller_ptr->create_document();
+    }
+
+    void import_document_btn(std::string filename)
+    {
+        controller_ptr->import_document(filename);
+    }
+
+    void export_document_btn(std::string filename)
+    {
+        controller_ptr->export_document(filename);
+    }
+
+    void create_gp_btn(){
+        controller_ptr->add_primitive();
+    }
+
+    void remove_gp_btn(size_t i){
+        controller_ptr->remove_primitive(i);
+    }
+
+    void render_gp(GraphPrimitive gp){std::cout << "Rendering graphic primitive\n" << gp.to_string() << std::endl;}
+
+    void render_all_gp()
+    {
+        auto gp_list = ws_ptr->get_gp_list();
+        for(auto gp : gp_list)
+        {
+            render_gp(gp);
+        }
+    }
+};
 
 int main()
 {
-    sfinae::print_ip( int8_t{-1}); // 255
-    sfinae::print_ip( int16_t{0} ); // 0.0
-    sfinae::print_ip( int32_t{2130706433} ); // 127.0.0.1
-    sfinae::print_ip( int64_t{8875824491850138409} );// 123.45.67.89.101.112.131.41
-    sfinae::print_ip(std::string{"Hello, World!"}); // Hello, World!
-    sfinae::print_ip( std::vector<int>{100, 200, 300, 400} ); // 100.200.300.400
-    sfinae::print_ip( std::list<short>{400, 300, 200, 100} ); // 400.300.200.100
-
+    std::unique_ptr<IGUIView> window_ptr(new GUIView);
+    while(true)
+        window_ptr->render_all_gp();
     return 0;
 }
