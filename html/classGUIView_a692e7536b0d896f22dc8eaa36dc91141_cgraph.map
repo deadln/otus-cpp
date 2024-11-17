@@ -1,7 +1,0 @@
-<map id="GUIView::render_all_gp" name="GUIView::render_all_gp">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,13,180,38"/>
-<area shape="rect" id="Node000002" href="$classGUIView.html#a101a1cf111a8c1bc05c05ddf41e87873" title=" " alt="" coords="228,13,379,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="180,23,214,23,214,28,180,28"/>
-<area shape="rect" id="Node000003" href="$classGraphPrimitive.html#a3c51a5b4b77dc7a5f33c537f870241c4" title=" " alt="" coords="427,5,568,45"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="379,23,413,23,413,28,379,28"/>
-</map>

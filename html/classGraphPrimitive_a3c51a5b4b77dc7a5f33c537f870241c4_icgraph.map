@@ -1,7 +1,0 @@
-<map id="GraphPrimitive::to_string" name="GraphPrimitive::to_string">
-<area shape="rect" id="Node000001" title=" " alt="" coords="427,5,568,45"/>
-<area shape="rect" id="Node000002" href="$classGUIView.html#a101a1cf111a8c1bc05c05ddf41e87873" title=" " alt="" coords="228,13,379,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="413,28,379,28,379,23,413,23"/>
-<area shape="rect" id="Node000003" href="$classGUIView.html#a692e7536b0d896f22dc8eaa36dc91141" title=" " alt="" coords="5,13,180,38"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="214,28,180,28,180,23,214,23"/>
-</map>
