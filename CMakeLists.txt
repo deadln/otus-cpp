@@ -3,18 +3,18 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(graph_editor VERSION ${PROJECT_VESRION})
+project(matrix_proxy VERSION ${PROJECT_VESRION})
 
 # option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
 # configure_file(version.h.in version.h)
 
-add_executable(graph_editor main.cpp)
-# add_library(graph_editor controller.cpp)
-# add_library(graph_editor model.cpp)
-# add_library(graph_editor gui_view.cpp)
+add_executable(matrix_proxy main.cpp)
+# add_library(matrix_proxy controller.cpp)
+# add_library(matrix_proxy model.cpp)
+# add_library(matrix_proxy gui_view.cpp)
 
-set_target_properties(graph_editor PROPERTIES
+set_target_properties(matrix_proxy PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -23,7 +23,7 @@ set_target_properties(graph_editor PROPERTIES
 #     PRIVATE "${CMAKE_BINARY_DIR}"
 # )
 
-target_link_libraries(graph_editor PRIVATE
+target_link_libraries(matrix_proxy PRIVATE
     # ipfilter
 )
 
@@ -48,7 +48,7 @@ target_link_libraries(graph_editor PRIVATE
 # endif()
 
 if (MSVC)
-    target_compile_options(graph_editor PRIVATE
+    target_compile_options(matrix_proxy PRIVATE
         /W4
     )
     # target_compile_options(ipfilter PRIVATE
@@ -60,7 +60,7 @@ if (MSVC)
     #     )
     # endif()
 else ()
-    target_compile_options(graph_editor PRIVATE
+    target_compile_options(matrix_proxy PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     # target_compile_options(ipfilter PRIVATE
@@ -73,7 +73,7 @@ else ()
     # endif()
 endif()
 
-install(TARGETS graph_editor RUNTIME DESTINATION bin)
+install(TARGETS matrix_proxy RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
