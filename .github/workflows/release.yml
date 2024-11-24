@@ -9,6 +9,7 @@ on:
       - homework3
       - homework4
       - homework6
+      - homework7
 
 
 jobs:
@@ -39,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./matrix_proxy-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: matrix_proxy-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./bulk-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: bulk-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-package

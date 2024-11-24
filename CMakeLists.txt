@@ -3,18 +3,16 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(matrix_proxy VERSION ${PROJECT_VESRION})
+project(bulk VERSION ${PROJECT_VESRION})
 
 # option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
 # configure_file(version.h.in version.h)
 
-add_executable(matrix_proxy main.cpp)
-# add_library(matrix_proxy controller.cpp)
-# add_library(matrix_proxy model.cpp)
-# add_library(matrix_proxy gui_view.cpp)
+add_executable(bulk main.cpp)
+add_library(bulk_buffer CommandBuffer.cpp)
 
-set_target_properties(matrix_proxy PROPERTIES
+set_target_properties(bulk bulk_buffer PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -23,8 +21,8 @@ set_target_properties(matrix_proxy PROPERTIES
 #     PRIVATE "${CMAKE_BINARY_DIR}"
 # )
 
-target_link_libraries(matrix_proxy PRIVATE
-    # ipfilter
+target_link_libraries(bulk PRIVATE
+    bulk_buffer
 )
 
 # if(WITH_BOOST_TEST)
@@ -48,24 +46,24 @@ target_link_libraries(matrix_proxy PRIVATE
 # endif()
 
 if (MSVC)
-    target_compile_options(matrix_proxy PRIVATE
+    target_compile_options(bulk PRIVATE
         /W4
     )
-    # target_compile_options(ipfilter PRIVATE
-    #     /W4
-    # )
+    target_compile_options(bulk_buffer PRIVATE
+        /W4
+    )
     # if(WITH_BOOST_TEST)
     #     target_compile_options(test_version PRIVATE
     #         /W4
     #     )
     # endif()
 else ()
-    target_compile_options(matrix_proxy PRIVATE
+    target_compile_options(bulk PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    # target_compile_options(ipfilter PRIVATE
-    #     -Wall -Wextra -pedantic -Werror
-    # )
+    target_compile_options(bulk_buffer PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
     # if(WITH_BOOST_TEST)
     #     target_compile_options(test_version PRIVATE
     #         -Wall -Wextra -pedantic -Werror
@@ -73,7 +71,7 @@ else ()
     # endif()
 endif()
 
-install(TARGETS matrix_proxy RUNTIME DESTINATION bin)
+install(TARGETS bulk RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
