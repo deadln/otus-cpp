@@ -6,25 +6,32 @@
 #include <unordered_map>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include "crc32.cpp"
+#include "md5.hpp"
 
 std::vector<std::string> inp_vec, exl_vec;
 std::set<std::string> exl_set;
 
 std::vector<std::string> files;
-std::unordered_map<std::string, std::vector<size_t>> files_hash;
+std::unordered_map<std::string, std::vector<std::string>> files_hash;
 int max_depth = 0;
 long unsigned int min_size = 1;
 int block_size = 1;
+std::string mask;
+boost::regex rx;
+boost::smatch what;
 int hash_type = 0;  // 0: std::hash; 1: crc32; 2: md5
+CRC32 crc32;
 
 namespace po = boost::program_options;
 
 void recursive_file_search(std::string dir_path, int depth)
 {
-    std::cout << "recursive_file_search: " << dir_path << std::endl;
+    // std::cout << "recursive_file_search: " << dir_path << std::endl;
     if(exl_set.find(dir_path) != exl_set.end())
     {
-        std::cout << "EXCLUDE ABORT\n";
+        // std::cout << "EXCLUDE ABORT\n";
         return;
     }
     boost::filesystem::directory_iterator begin(dir_path);
@@ -34,36 +41,37 @@ void recursive_file_search(std::string dir_path, int depth)
         boost::filesystem::status(*begin);{
         switch (fs.type()) {
             case boost::filesystem::regular_file: 
-                std::cout << "FILE ";
+                // std::cout << "FILE " << begin->path().filename().string() << " ";
                 // auto path = boost::filesystem::path(*begin);
-                if(boost::filesystem::file_size(boost::filesystem::path(*begin)) >= min_size)
+                if(boost::filesystem::file_size(boost::filesystem::path(*begin)) >= min_size && 
+                (mask.length() == 0 || boost::regex_match( begin->path().filename().string(), what, rx)))
                 {
-                    std::cout << "SIZE_OK ";
+                    // std::cout << "SIZE_OK REGEX_OK";
                     files.push_back(boost::filesystem::path(*begin).string());
-                    files_hash[boost::filesystem::path(*begin).string()] = std::vector<size_t>();
+                    files_hash[boost::filesystem::path(*begin).string()] = std::vector<std::string>();
                 }
                 break;
             case boost::filesystem::symlink_file:
                 // Пропускаем
-                std::cout << "SYMLINK ";
+                // std::cout << "SYMLINK ";
                 break;
             case boost::filesystem::directory_file: 
-                std::cout << "DIRECTORY ";
+                // std::cout << "DIRECTORY ";
                 if(depth < max_depth)
                 {
                     recursive_file_search(boost::filesystem::path(*begin).string(), depth + 1);
                 }
                 break;
             default: 
-                std::cout << "OTHER ";
+                // std::cout << "OTHER ";
                 break;
         }
-        if (fs.permissions() & boost::filesystem::owner_write) {
-            std::cout << "W ";
-        } else {
-            std::cout << " ";
-        }
-        std::cout << *begin << '\n';
+        // if (fs.permissions() & boost::filesystem::owner_write) {
+        //     std::cout << "W ";
+        // } else {
+        //     std::cout << " ";
+        // }
+        // std::cout << *begin << '\n';
     } /*for*/
 } /*main*/
 }
@@ -96,29 +104,31 @@ std::string read_block_from_file(std::string file, long int pos)
     return res;
 }
 
-size_t get_hash(std::string s)
+std::string get_hash(std::string s)
 {
     if(hash_type == 0)
     {
         std::hash<std::string> str_hash;
-        return str_hash(s);
+        return std::to_string(str_hash(s));
     }
     else if(hash_type == 1)
     {
-        // TODO
+        crc32.Update(&s, s.length());
+        return std::to_string(crc32.GetValue());
     }
     else if(hash_type == 2)
     {
-        // TODO
+        return MD5(s).hexdigest();
     }
+    return 0;
 }
 
 bool compare_files(std::string file1, std::string file2)
 {
-    std::cout << "Compare files:\n" << file1 << "\n" << file2 << std::endl;
+    // std::cout << "Compare files:\n" << file1 << "\n" << file2 << std::endl;
     long unsigned int i = 0;
     std::string str_block, empty_str;
-    size_t block1, block2, empty_hash = get_hash(empty_str);
+    std::string block1, block2, empty_hash = get_hash(empty_str);
     for(;;)
     {
         // Проверяем, имеется ли уже вычесленный блок
@@ -165,6 +175,7 @@ bool compare_files(std::string file1, std::string file2)
 
 int main(int argc, const char *argv[])
 {
+    // std::setlocale(LC_ALL, "en_US.UTF-8");
     try {
         po::options_description desc{"Options"};
         desc.add_options()
@@ -190,32 +201,36 @@ int main(int argc, const char *argv[])
         
         if (vm.count("depth"))
         {
-            std::cout << "depth: " << vm["depth"].as<int>() << std::endl;
+            // std::cout << "depth: " << vm["depth"].as<int>() << std::endl;
             max_depth = vm["depth"].as<int>();
         }
         if (vm.count("min_size"))
         {
-            std::cout << "min_size: " << vm["min_size"].as<long unsigned int>() << std::endl;
+            // std::cout << "min_size: " << vm["min_size"].as<long unsigned int>() << std::endl;
             min_size = vm["min_size"].as<long unsigned int>();
         }
         if (vm.count("mask"))
-            std::cout << "mask: " << vm["mask"].as<std::string>() << std::endl;
+        {
+            mask = vm["mask"].as<std::string>();
+            // std::cout << "mask: " << mask << " " << mask << std::endl;
+            rx = mask;
+        }
         if (vm.count("size"))
         {
-            std::cout << "size: " << vm["size"].as<int>() << std::endl;
+            // std::cout << "size: " << vm["size"].as<int>() << std::endl;
             block_size = vm["size"].as<int>();
         }
             
         if (vm.count("hash"))
         {
             std::string h = vm["hash"].as<std::string>();
-            std::cout << "hash: " << h << std::endl;
+            // std::cout << "hash: " << h << std::endl;
             if(h == "std")
                 hash_type = 0;
             else if (h == "crc32")
-                hash_type == 1;
+                hash_type = 1;
             else if (h == "md5")
-                hash_type == 2;
+                hash_type = 2;
             else
             {
                 std::cout << "Wrong hash option!\n";
@@ -226,27 +241,27 @@ int main(int argc, const char *argv[])
         if (vm.count("input"))
         {
             inp_vec = vm["input"].as<std::vector<std::string> >();
-            std::cout << "input: " << std::endl;
+            // std::cout << "input: " << std::endl;
             for(long unsigned int i = 0; i < inp_vec.size(); i++)
             {
                 if(inp_vec[i][inp_vec[i].length() - 1] == '/')
                     inp_vec[i] = inp_vec[i].substr(0, inp_vec[i].length() - 1);
-                std::cout << inp_vec[i] << " | ";
+                // std::cout << inp_vec[i] << " | ";
             }
-            std::cout << std::endl;
+            // std::cout << std::endl;
         }
         if (vm.count("exclude"))
         {
             exl_vec = vm["exclude"].as<std::vector<std::string>>();
-            std::cout << "exclude: " << std::endl;
+            // std::cout << "exclude: " << std::endl;
             for(long unsigned int i = 0; i < exl_vec.size(); i++)
             {
                 if(exl_vec[i][exl_vec[i].length() - 1] == '/')
                     exl_vec[i] = exl_vec[i].substr(0, exl_vec[i].length() - 1);
-                std::cout << exl_vec[i] << " | ";
+                // std::cout << exl_vec[i] << " | ";
                 exl_set.insert(exl_vec[i]);
             }
-            std::cout << std::endl;
+            // std::cout << std::endl;
         }
             
     }
@@ -259,14 +274,14 @@ int main(int argc, const char *argv[])
     {
         recursive_file_search(dir, 0);
     }
-    std::cout << "\n\nFiles:\n";
-    for(auto file : files)
-    {
-        std::cout << file << std::endl;
-    }
-    std::cout << std::endl;
+    // std::cout << "\n\nFiles:\n";
+    // for(auto file : files)
+    // {
+    //     std::cout << file << std::endl;
+    // }
+    // std::cout << std::endl;
 
-    std::map<std::vector<size_t>, std::set<std::string>> result;
+    std::map<std::vector<std::string>, std::set<std::string>> result;
     // Затем начинаем их сравнивать
     for(size_t i = 0; i < files.size(); i++)
     {
@@ -280,14 +295,14 @@ int main(int argc, const char *argv[])
         }
     }
 
-    std::cout << "\n\nDuplicates:\n";
+    std::cout << "Duplicates:\n";
     for(auto h : result)
     {
         for(auto f : h.second)
         {
             std::cout << f << std::endl;
         }
-        std::cout << "------------------------------\n"; 
+        std::cout << "\n"; 
     }
     return 0;
 }

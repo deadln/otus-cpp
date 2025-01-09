@@ -9,11 +9,12 @@ project(bayan VERSION ${PROJECT_VESRION})
 
 # configure_file(version.h.in version.h)
 
-find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem unit_test_framework regex REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 add_executable(bayan main.cpp)
-# add_library(bulk_buffer CommandBuffer.cpp)
+add_library(crc32 crc32.cpp)
+add_library(md5 md5.cpp)
 
 set_target_properties(bayan PROPERTIES
     CXX_STANDARD 14
@@ -27,6 +28,8 @@ set_target_properties(bayan PROPERTIES
 target_link_libraries(bayan ${Boost_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
+    crc32
+    md5
     # bulk_buffer
 )
 
@@ -64,7 +67,7 @@ if (MSVC)
     # endif()
 else ()
     target_compile_options(bayan PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        -Wall -Wextra -pedantic # -Werror
     )
     # target_compile_options(bulk_buffer PRIVATE
     #     -Wall -Wextra -pedantic -Werror
