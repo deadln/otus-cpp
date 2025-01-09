@@ -3,16 +3,19 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(bulk VERSION ${PROJECT_VESRION})
+project(bayan VERSION ${PROJECT_VESRION})
 
 # option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
 # configure_file(version.h.in version.h)
 
-add_executable(bulk main.cpp)
-add_library(bulk_buffer CommandBuffer.cpp)
+find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
 
-set_target_properties(bulk bulk_buffer PROPERTIES
+add_executable(bayan main.cpp)
+# add_library(bulk_buffer CommandBuffer.cpp)
+
+set_target_properties(bayan PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -21,8 +24,10 @@ set_target_properties(bulk bulk_buffer PROPERTIES
 #     PRIVATE "${CMAKE_BINARY_DIR}"
 # )
 
-target_link_libraries(bulk PRIVATE
-    bulk_buffer
+target_link_libraries(bayan ${Boost_LIBRARIES}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    # bulk_buffer
 )
 
 # if(WITH_BOOST_TEST)
@@ -46,24 +51,24 @@ target_link_libraries(bulk PRIVATE
 # endif()
 
 if (MSVC)
-    target_compile_options(bulk PRIVATE
+    target_compile_options(bayan PRIVATE
         /W4
     )
-    target_compile_options(bulk_buffer PRIVATE
-        /W4
-    )
+    # target_compile_options(bulk_buffer PRIVATE
+    #     /W4
+    # )
     # if(WITH_BOOST_TEST)
     #     target_compile_options(test_version PRIVATE
     #         /W4
     #     )
     # endif()
 else ()
-    target_compile_options(bulk PRIVATE
+    target_compile_options(bayan PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(bulk_buffer PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
+    # target_compile_options(bulk_buffer PRIVATE
+    #     -Wall -Wextra -pedantic -Werror
+    # )
     # if(WITH_BOOST_TEST)
     #     target_compile_options(test_version PRIVATE
     #         -Wall -Wextra -pedantic -Werror
@@ -71,7 +76,7 @@ else ()
     # endif()
 endif()
 
-install(TARGETS bulk RUNTIME DESTINATION bin)
+install(TARGETS bayan RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
