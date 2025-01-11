@@ -13,7 +13,7 @@ find_package(Boost COMPONENTS program_options filesystem unit_test_framework reg
 include_directories(${Boost_INCLUDE_DIR})
 
 add_executable(bayan main.cpp)
-add_library(crc32 crc32.cpp)
+# add_library(crc32 crc32.cpp)
 add_library(md5 md5.cpp)
 
 set_target_properties(bayan PROPERTIES
@@ -28,7 +28,7 @@ set_target_properties(bayan PROPERTIES
 target_link_libraries(bayan ${Boost_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    crc32
+    # crc32
     md5
     # bulk_buffer
 )
