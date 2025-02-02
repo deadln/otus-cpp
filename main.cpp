@@ -1,59 +1,22 @@
 #include <iostream>
-#include <string>
-#include <vector>
-#include <memory>
+#include <atomic>
 
-#include "CommandBuffer.h"
+#include "async.h"
 
-int main(int argc, char *argv[])
-{
-    int N = atoi(argv[argc - 1]);
-    int par_count = 0;  // Счётчик скобок
-    std::unique_ptr<CommandBufferI> comm_buf = std::make_unique<ConsoleBuffer>();
-    std::unique_ptr<CommandBufferI> file_log = std::make_unique<LogfileBuffer>();
-    std::string prefix = "bulk";
-    std::string open_par = "{";
-    std::string close_par = "}";
+int main(int, char *[]) {
+    std::size_t bulk = 5;
+    auto h = async::connect(bulk);
+    auto h2 = async::connect(bulk);
+    auto h3 = async::connect(bulk);
+    async::receive(h, "1", 1);
+    async::receive(h2, "10\n20\n30\n40\n50\n10\n20\n30\n40\n50\n10\n20\n30\n40\n50\n10\n20\n30\n40\n50\n", 60);
+    async::receive(h, "\n2\n3\n4\n5\n6\n{\na\n", 15);
+    async::receive(h3, "a1\na2\n{\na3\na4\na5\na6\na7\na8\n}\na9\na10\na11\na12\n", 42);
+    async::receive(h2, "10\n20\n30\n40\n50\n10\n20\n30\n40\n50\n", 30);
+    async::receive(h, "b\nc\nd\n}\n89\n", 11);
+    async::disconnect(h);
+    async::disconnect(h2);
+    async::disconnect(h3);
 
-    for(std::string line; std::getline(std::cin, line);)
-    {
-        if(line.length() == 0)
-            break;
-        if(line == open_par)
-        {
-            if(par_count == 0)
-            {
-                comm_buf->output_buffer(prefix);
-                file_log->output_buffer(prefix);
-            }
-            par_count++;
-        }
-        else if(line == close_par)
-        {
-            if(par_count == 1)
-            {
-                comm_buf->output_buffer(prefix);
-                file_log->output_buffer(prefix);
-            }
-            par_count--;
-            continue;
-        }
-        else
-        {
-            comm_buf->push_to_buffer(line);
-            file_log->push_to_buffer(line);
-        }
-            
-        if(par_count == 0 && comm_buf->size() == N)
-        {
-            comm_buf->output_buffer(prefix);
-            file_log->output_buffer(prefix);
-        }
-    }
-    if(par_count == 0)
-    {
-        comm_buf->output_buffer(prefix);
-        file_log->output_buffer(prefix);
-    }
     return 0;
 }
