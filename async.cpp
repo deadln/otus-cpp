@@ -8,13 +8,14 @@ uint64_t timeSinceEpochMillisec() {
   return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
+// Поток логирования в консоль
 void log_thread()
 {
     std::unique_lock<std::mutex> lck{conditionMutex_log};
     std::vector<std::string> cmd_seq;
     bool pop_res;
 
-    while(true) // Сделать для вывода отдельный вектор с элементами, которые будут выведены. Решить проблему с добавлением в вектор элементов когда он реаллоцируется
+    while(true)
     {
         while(log_queue.empty()) 
         {
@@ -42,6 +43,7 @@ void log_thread()
     }
 }
 
+// Нечётный поток логирования
 void file1_thread()
 {
     std::unique_lock<std::mutex> lck{conditionMutex_file};
@@ -55,11 +57,9 @@ void file1_thread()
                 break;
             condition_file.wait(lck);
         }
-        // std::cout << "File1 thread working\n";
-        // std::cout << std::boolalpha << file_queue.empty() << std::endl;
         if(file_queue.empty() && !active_connection)
             break;
-        else if(even || file_queue.empty())  // TODO: ПРОВЕРИТЬ ЧЁТНОСТЬ!
+        else if(even || file_queue.empty())
         {
             even = !even;
             continue;
@@ -67,25 +67,22 @@ void file1_thread()
         pop_res = file_queue.tryPop(cmd_seq);
         if(!pop_res || cmd_seq.second.empty())
             continue;
-        out1.open(std::to_string(cmd_seq.first) + std::string("_1") + std::string(".log"));  // TODO: ПРОВЕРИТЬ ЧЁТНОСТЬ!
-        // std::cout << "file1: ";
+        out1.open(std::to_string(cmd_seq.first) + std::string("_1") + std::string(".log"));
         out1 << std::to_string(cmd_seq.first) << ": ";
         for (unsigned int i = 0; i < cmd_seq.second.size(); i++)
         {
-            // std::cout << cmd_seq.second[i] << " ";
             out1 << cmd_seq.second[i];
             if(i < cmd_seq.second.size() - 1)
                 out1 << ", ";
         }
-        // std::cout << std::endl;
         out1 << std::endl;
         out1.close();
         even = !even;
     }
     even = true;
-    // std::cout << "file1 stopped working\n";
 }
 
+// Чётный поток логирования
 void file2_thread()
 {
     std::unique_lock<std::mutex> lck{conditionMutex_file};
@@ -99,11 +96,9 @@ void file2_thread()
                 break;
             condition_file.wait(lck);
         }
-        // std::cout << "File2 thread working\n";
-        // std::cout << std::boolalpha << file_queue.empty() << std::endl;
         if(file_queue.empty() && !active_connection)
             break;
-        else if(!even || file_queue.empty())  // TODO: ПРОВЕРИТЬ ЧЁТНОСТЬ!
+        else if(!even || file_queue.empty())
         {
             even = !even;
             continue;
@@ -111,35 +106,19 @@ void file2_thread()
         pop_res = file_queue.tryPop(cmd_seq);
         if(!pop_res || cmd_seq.second.empty())
             continue;
-        out2.open(std::to_string(cmd_seq.first) + std::string("_2") + std::string(".log"));  // TODO: ПРОВЕРИТЬ ЧЁТНОСТЬ!
-        // std::cout << "file2: ";
+        out2.open(std::to_string(cmd_seq.first) + std::string("_2") + std::string(".log"));
         out2 << std::to_string(cmd_seq.first) << ": ";
         for (unsigned int i = 0; i < cmd_seq.second.size(); i++)
         {
-            // std::cout << cmd_seq.second[i] << " ";
             out2 << cmd_seq.second[i];
             if(i < cmd_seq.second.size() - 1)
                 out2 << ", ";
         }
-        // std::cout << std::endl;
         out2 << std::endl;
         out2.close();
         even = !even;
     }
     even = false;
-    // std::cout << "file2 stopped working\n";
-}
-
-void finish_threads()
-{
-    while(!log_queue.empty() || !file_queue.empty());
-    // std::cout << "Queues are empty\n";
-    active_connection = false;
-    condition_log.notify_all();
-    condition_file.notify_all();
-    log->join();
-    file1->join();
-    file2->join();
 }
 
 handle_t connect(std::size_t bulk) {
@@ -177,7 +156,6 @@ void receive(handle_t handle, const char *data, std::size_t size) {
                 file_queue.push(std::make_pair(context_timestamp[handle], std::vector<std::string>(context_map[handle].second)));
                 log_queue.push(std::move(context_map[handle].second));
                 context_map[handle].second = std::vector<std::string>();
-                // std::cout << "Notify all 1\n";
                 condition_log.notify_all();
                 condition_file.notify_all();
             }
@@ -190,7 +168,6 @@ void receive(handle_t handle, const char *data, std::size_t size) {
                 file_queue.push(std::make_pair(context_timestamp[handle], std::vector<std::string>(context_map[handle].second)));
                 log_queue.push(std::move(context_map[handle].second));
                 context_map[handle].second = std::vector<std::string>();
-                // std::cout << "Notify all 2\n";
                 condition_log.notify_all();
                 condition_file.notify_all();
             }
@@ -199,11 +176,9 @@ void receive(handle_t handle, const char *data, std::size_t size) {
         }
         else // Передача команды в буффер
         {
-            // std::cout << "{" << handle << "}" << ": command: " << line << std::endl;
             if(context_map[handle].second.size() == 0)
             {
                 context_timestamp[handle] = timeSinceEpochMillisec();
-                // std::cout << "Init new timestamp: " << context_timestamp[handle] << std::endl;
             }
             context_map[handle].second.push_back(line);
         }
@@ -222,10 +197,8 @@ void receive(handle_t handle, const char *data, std::size_t size) {
 }
 
 void disconnect(handle_t handle) {
-    // std::cout << "Disconnecting " << handle << "\n";
     file_queue.push(std::make_pair(context_timestamp[handle], std::vector<std::string>(context_map[handle].second)));
     log_queue.push(std::move(context_map[handle].second));
-    // std::cout << "Notify all 3\n";
     condition_log.notify_all();
     condition_file.notify_all();
     context_map.erase(handle);
@@ -238,9 +211,6 @@ void disconnect(handle_t handle) {
         log->join();
         file1->join();
         file2->join();
-        // thread_finisher = std::make_unique<std::thread>(finish_threads);
-        // thread_finisher->detach();
-        // sleeper->join();
     }
 }
 }

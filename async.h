@@ -24,7 +24,6 @@ std::string close_par = "}";
 std::unique_ptr<std::thread> log = nullptr;
 std::unique_ptr<std::thread> file1 = nullptr;
 std::unique_ptr<std::thread> file2 = nullptr;
-// std::unique_ptr<std::thread> thread_finisher = nullptr;
 
 std::mutex conditionMutex_log;
 std::condition_variable condition_log;

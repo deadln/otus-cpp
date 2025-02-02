@@ -21,10 +21,10 @@ set_target_properties(async PROPERTIES
 )
 
 if (MSVC)
-    target_compile_options(bulk PRIVATE
+    target_compile_options(async_cli PRIVATE
         /W4
     )
-    target_compile_options(bulk_buffer PRIVATE
+    target_compile_options(async PRIVATE
         /W4
     )
     # if(WITH_BOOST_TEST)
