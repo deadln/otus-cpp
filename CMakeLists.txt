@@ -7,6 +7,9 @@ project(bulk_server VERSION ${PROJECT_VESRION})
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(BOOST_ROOT /usr/include/boost)
+set(Boost_USE_STATIC_LIBS ON)
+
 find_package(Threads)
 find_package(Boost COMPONENTS system REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
@@ -19,7 +22,6 @@ add_executable(bulk_server main.cpp)
 target_link_libraries(server
     async
     ${Boost_LIBRARIES} 
-    ${Boost_FILESYSTEM_LIBRARY} 
     ${Boost_SYSTEM_LIBRARY}
 )
 
