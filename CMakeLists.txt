@@ -8,7 +8,7 @@ project(bulk_server VERSION ${PROJECT_VESRION})
 set(CMAKE_CXX_STANDARD 14)
 
 find_package(Threads)
-find_package(Boost COMPONENTS program_options filesystem unit_test_framework regex REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 add_library(async SHARED async.cpp async.h)
