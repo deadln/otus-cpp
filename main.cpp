@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
 
     for(std::string line; std::getline(std::cin, line);)
     {
-        line += '\n';
         async::receive(h, line.c_str(), line.length());
     }
     async::disconnect(h);
