@@ -3,8 +3,10 @@
 
 #include "async.h"
 
-int main(int, char *[]) {
-    std::size_t bulk = 5;
+int main(int argc, char *argv[])
+{
+    std::cout << "Unit test\n";
+    std::size_t bulk = atoi(argv[argc - 1]);
     auto h = async::connect(bulk);
     auto h2 = async::connect(bulk);
     auto h3 = async::connect(bulk);
@@ -17,6 +19,16 @@ int main(int, char *[]) {
     async::disconnect(h);
     async::disconnect(h2);
     async::disconnect(h3);
+
+    std::cout << "User input:\n";
+    h = async::connect(bulk);
+
+    for(std::string line; std::getline(std::cin, line);)
+    {
+        line += '\n';
+        async::receive(h, line.c_str(), line.length());
+    }
+    async::disconnect(h);
 
     return 0;
 }
